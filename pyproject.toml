@@ -26,4 +26,4 @@ py-modules = [
 ]
 
 [tool.uv.sources]
-eddie-helper = { git = "https://github.com/chrishalcrow/eddie_helper.git" }
+eddie-helper = { git = "https://github.com/yz753/eddie_helper.git", branch = "main" }

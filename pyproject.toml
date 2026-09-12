@@ -16,5 +16,14 @@ dependencies = [
 requires = ["setuptools>=78.0.2"]
 build-backend = "setuptools.build_meta"
 
+[tool.setuptools]
+py-modules = [
+    "common_paths",
+    "crop",
+    "pose_estimation",
+    "pose_estimation_on_eddie",
+    "write_filepaths",
+]
+
 [tool.uv.sources]
 eddie-helper = { git = "https://github.com/chrishalcrow/eddie_helper.git" }

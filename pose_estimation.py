@@ -41,6 +41,7 @@ from pathlib import Path
 import cv2
 import deeplabcut as dlc
 import pandas as pd
+from common_paths import local_yiming_data_folder, local_yiming_deriv_folder, local_yiming_models_folder
 
 
 def make_cropped_video(video_path, output_path, cropping):
@@ -83,35 +84,35 @@ def make_cropped_video(video_path, output_path, cropping):
 def main():
     parser = ArgumentParser()
 
-    parser.add_argument("mouse")
-    parser.add_argument("day")
-    parser.add_argument("session")
-    parser.add_argument("bodypart")
+    parser.add_argument("--mice")
+    parser.add_argument("--days")
+    parser.add_argument("--sessions")
+    parser.add_argument("--bodyparts")
     parser.add_argument("--data_folder", default=None)
     parser.add_argument("--deriv_folder", default=None)
     parser.add_argument("--models_folder", default=None, help="Folder where you keep your dlc models")
 
-    mouse = int(parser.parse_args().mouse)
-    day = int(parser.parse_args().day)
-    session = parser.parse_args().session
-    bodypart = parser.parse_args().bodypart
+    mouse = int(parser.parse_args().mice)
+    day = int(parser.parse_args().days)
+    session = parser.parse_args().sessions
+    bodypart = parser.parse_args().bodyparts
 
     if bodypart not in ["tongue", "eye", "body"]:
-        raise UserWarning("bodypart must be lick eye or body!")
+        raise UserWarning("bodypart must be tongue eye or body!")
 
     data_folder = parser.parse_args().data_folder
     if data_folder is None:
-        data_folder = "/exports/eddie/scratch/chalcrow/data"
+        data_folder = local_yiming_data_folder
     data_folder = Path(data_folder)
 
     deriv_folder = parser.parse_args().deriv_folder
     if deriv_folder is None:
-        deriv_folder = "/exports/eddie/scratch/chalcrow/derivatives"
+        deriv_folder = local_yiming_deriv_folder
     deriv_folder = Path(deriv_folder)
 
     models_folder = parser.parse_args().models_folder
     if models_folder is None:
-        models_folder = "/exports/eddie/scratch/chalcrow/code/models"
+        models_folder = local_yiming_models_folder
     models_folder = Path(models_folder)
 
     if bodypart == "tongue":
@@ -126,17 +127,17 @@ def main():
     else:
         session_type_folder = 'VR'
         
-    mouse_day_session_folder = list(
-        (data_folder / session_type_folder).glob(f"M{mouse:02d}_D{day:02d}_*{session}")
-    )[0]
+    # mouse_day_session_folder = list(
+    #     (data_folder / session_type_folder).glob(f"M{mouse:02d}_D{day:02d}_*{session}")
+    # )[0]
 
     if bodypart in ["eye", "tongue"]:
         video_path = str(
-            mouse_day_session_folder
-            / f"M{mouse:02d}_D{day:02d}_{session}_side_capture.avi"
+            data_folder / session_type_folder
+            / f"M{mouse:02d}_D{day:02d}_side_capture_{session}.avi"
         )
     else:
-        matching_files = list(mouse_day_session_folder.glob(f'M{mouse:02d}_D{day:02d}_*_{session}.avi'))
+        matching_files = list((data_folder / session_type_folder).glob(f'M{mouse:02d}_D{day:02d}_*_{session}.avi'))
         video_path = str(matching_files[0])
 
     save_path = (
@@ -148,19 +149,13 @@ def main():
     )
 
     if bodypart in ["eye", "tongue"]:
-        all_crop_info = pd.read_csv(f"wolf_crops/{bodypart}_crops_wolf.csv")
+        all_crop_info = pd.read_csv(f"yiming_crops/{bodypart}_crops_yiming.csv")
         mouseday_crops = all_crop_info.query(f"mouse == {mouse} & day == {day}")
         if len(mouseday_crops) > 0:
             x, y, w, h = mouseday_crops[["x", "y", "w", "h"]].values[0]
+            cropping = [x, y, w, h]
         else:
-            # if we've not done manual crops, use the last day.
-            x, y, w, h = (
-                all_crop_info.query(f"mouse == {mouse}")
-                .sort_values("day")
-                .iloc[-1][["x", "y", "w", "h"]]
-                .values
-            )
-        cropping = [x, y, w, h]
+            cropping = None
     else:
         cropping = None
 

@@ -33,15 +33,12 @@ def main():
     parser.add_argument('--deriv_folder', default="")
     parser.add_argument("--models_folder", default=None, help="Folder where you keep your dlc models")
 
-    mouse = int(parser.parse_args().mouse)
-    mouse_string = f"{mouse:02d}"
+    args = parser.parse_args()
+    mice = [int(mouse) for mouse in args.mice.split(",")]
+    days = [int(day) for day in args.days.split(",")]
+    sessions = args.sessions.split(",")
+    bodyparts = args.bodyparts.split(",")
     
-    day = int(parser.parse_args().day)
-    day_string = f"{day:02d}"
-
-    session = parser.parse_args().session
-    bodypart = parser.parse_args().bodypart
-
     data_folder = parser.parse_args().data_folder
     if len(data_folder) == 0:
         data_folder = eddie_yiming_data_folder
@@ -57,38 +54,47 @@ def main():
         models_folder = eddie_yiming_models_folder
     models_folder = Path(models_folder)
     
-    recording_paths = filepath_from_mouse_day_sessions(mouse, day, sessions=[session], path_to_all_filepaths=eddie_yiming_csv_path)
+    for mouse in mice:
+        for day in days:
+            for session in sessions:
+                for bodypart in bodyparts:
+                    mouse_string = f"{mouse:02d}"
+                    day_string = f"{day:02d}"
+                    
+                    recording_paths = filepath_from_mouse_day_sessions(mouse, day, sessions=[session], path_to_all_filepaths=eddie_yiming_csv_path)
 
-    do_stagein_job = False
-    stagein_dict = {}
-    for recording_path in recording_paths:
-        if "OF" in recording_path:
-            video_name = f'M{mouse_string}_D{day_string}_*_{session}.avi'
-            session_type_folder = data_folder / 'OF'
-        else:
-            video_name = f'M{mouse_string}_D{day_string}_side_capture_{session}.avi'
-            session_type_folder = data_folder / 'VR'    
-        output_path = session_type_folder / video_name
+                    do_stagein_job = False
+                    stagein_dict = {}
+                    for recording_path in recording_paths:
+                        if "OF" in recording_path:
+                            video_name = f'M{mouse_string}_D{day_string}_*_{session}.avi'
+                            session_type_folder = data_folder / 'OF'
+                        else:
+                            video_name = f'M{mouse_string}_D{day_string}_side_capture_{session}.avi'
+                            session_type_folder = data_folder / 'VR'    
+                        output_path = session_type_folder / video_name
 
-        if len(list(output_path.parent.glob(video_name))) == 0:
-            stagein_dict[f"{eddie_datastore / recording_path}"] = session_type_folder
-            do_stagein_job = True
-            
-        session_type_folder.mkdir(exist_ok=True)
-        
-    stagein_job_name = f"M{mouse}D{day}{session[:2]}in" 
-    run_python_name = f"M{mouse}D{day}{session[:2]}{bodypart}"
-    stageout_job_name = f"M{mouse}D{day}{session[:2]}out" 
+                        if len(list(output_path.parent.glob(video_name))) == 0:
+                            stagein_dict[f"{eddie_datastore / recording_path}"] = session_type_folder
+                            do_stagein_job = True
+                            
+                        session_type_folder.mkdir(exist_ok=True)
+                        
+                    stagein_job_name = f"M{mouse}D{day}{session[:2]}in" 
+                    run_python_name = f"M{mouse}D{day}{session[:2]}{bodypart}"
+                    stageout_job_name = f"M{mouse}D{day}{session[:2]}out" 
 
-    stageout_dict = {deriv_folder / f"M{mouse:02d}/D{day:02d}/{session}/dlc_output_{bodypart}": eddie_datastore / "derivatives" / f"M{mouse:02d}/D{day:02d}/{session}/"}
+                    stageout_dict = {deriv_folder / f"M{mouse:02d}/D{day:02d}/{session}/dlc_output_{bodypart}": eddie_datastore / "derivatives" / f"M{mouse:02d}/D{day:02d}/{session}/"}
 
-    uv_directory = os.getcwd()
-    python_arg = f"pose_estimation.py --mice={mouse} --days={day} --sessions={session} --bodyparts={bodypart} --data_folder={data_folder} --deriv_folder={deriv_folder} --models_folder={models_folder}"
+                    uv_directory = os.getcwd()
+                    python_arg = f"pose_estimation.py --mice={mouse} --days={day} --sessions={session} --bodyparts={bodypart} --data_folder={data_folder} --deriv_folder={deriv_folder} --models_folder={models_folder}"
 
-    if do_stagein_job:
-        run_stage_script(stagein_dict, job_name=stagein_job_name)
-    run_python_script(uv_directory, python_arg, cores=8, email="y.zhao@ed.ac.uk", staging=False, hold_jid=stagein_job_name, job_name=run_python_name)
-    run_stage_script(stageout_dict, job_name=stageout_job_name, hold_jid=run_python_name)
+                    stagein_dependency = None
+                    if do_stagein_job:
+                        run_stage_script(stagein_dict, job_name=stagein_job_name)
+                        stagein_dependency = stagein_job_name
+                    run_python_script(uv_directory, python_arg, cores=8, email="y.zhao@ed.ac.uk", staging=False, hold_jid=stagein_dependency, job_name=run_python_name)
+                    run_stage_script(stageout_dict, job_name=stageout_job_name, hold_jid=run_python_name)
 
 if __name__ == "__main__":
     main()

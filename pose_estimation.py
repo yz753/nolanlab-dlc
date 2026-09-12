@@ -152,8 +152,11 @@ def main():
         all_crop_info = pd.read_csv(f"yiming_crops/{bodypart}_crops_yiming.csv")
         mouseday_crops = all_crop_info.query(f"mouse == {mouse} & day == {day}")
         if len(mouseday_crops) > 0:
-            x, y, w, h = mouseday_crops[["x", "y", "w", "h"]].values[0]
-            cropping = [x, y, w, h]
+            crop_values = mouseday_crops[["x", "y", "w", "h"]].iloc[0]
+            if crop_values.isna().any():
+                cropping = None
+            else:
+                cropping = crop_values.astype(int).to_list()
         else:
             cropping = None
     else:

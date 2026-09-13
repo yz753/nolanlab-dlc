@@ -133,11 +133,11 @@ def main():
 
     if bodypart in ["eye", "tongue"]:
         video_folder = data_folder / session_type_folder
-        unpadded_video_path = str(
+        unpadded_video_path = (
             video_folder
             / f"M{mouse}_D{day}_side_capture_{session}.avi"
         )
-        padded_video_path = str(
+        padded_video_path = (
             video_folder
             / f"M{mouse:02d}_D{day:02d}_side_capture_{session}.avi"
         )

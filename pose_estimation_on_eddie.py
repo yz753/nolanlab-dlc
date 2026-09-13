@@ -67,20 +67,30 @@ def main():
                     stagein_dict = {}
                     for recording_path in recording_paths:
                         if "OF" in recording_path:
-                            video_name = f'M{mouse_string}_D{day_string}_*_{session}.avi'
+                            padded_video_name = f'M{mouse_string}_D{day_string}_*_{session}.avi'
+                            unpadded_video_name = f'M{mouse}_D{day}_*_{session}.avi'
                             session_type_folder = data_folder / 'OF'
                         else:
-                            video_name = f'M{mouse_string}_D{day_string}_side_capture_{session}.avi'
+                            padded_video_name = f'M{mouse_string}_D{day_string}_side_capture_{session}.avi'
+                            unpadded_video_name = f'M{mouse}_D{day}_side_capture_{session}.avi'
                             session_type_folder = data_folder / 'VR'    
-                        output_path = session_type_folder / video_name
-                        output_path.parent.mkdir(parents=True, exist_ok=True)
-
-                        if len(list(output_path.parent.glob(video_name))) == 0:
-                            stagein_dict[f"{eddie_datastore /'data'/ recording_path}"] = session_type_folder
-                            do_stagein_job = True
-                            
                         session_type_folder.mkdir(parents=True, exist_ok=True)
-                        
+                        padded_output_path = session_type_folder / padded_video_name
+                        unpadded_output_path = session_type_folder / unpadded_video_name
+                        padded_output_path.parent.mkdir(parents=True, exist_ok=True)
+                        unpadded_output_path.parent.mkdir(parents=True, exist_ok=True)
+
+                        if not padded_output_path.exists():
+                            if not unpadded_output_path.exists():
+                                stagein_dict[f"{eddie_datastore /'data'/ recording_path}"] = session_type_folder
+                                do_stagein_job = True
+                            if unpadded_output_path.exists():
+                                # files are not renamed yet
+                                try:
+                                    unpadded_output_path.rename(padded_output_path)
+                                except FileNotFoundError: # it might be renamed by another job
+                                    pass
+                    
                     stagein_job_name = f"M{mouse}D{day}{session[:2]}in" 
                     run_python_name = f"M{mouse}D{day}{session[:2]}{bodypart}"
                     stageout_job_name = f"M{mouse}D{day}{session[:2]}out" 

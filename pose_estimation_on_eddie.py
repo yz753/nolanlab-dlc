@@ -73,18 +73,19 @@ def main():
                             video_name = f'M{mouse_string}_D{day_string}_side_capture_{session}.avi'
                             session_type_folder = data_folder / 'VR'    
                         output_path = session_type_folder / video_name
+                        output_path.parent.mkdir(parents=True, exist_ok=True)
 
                         if len(list(output_path.parent.glob(video_name))) == 0:
-                            stagein_dict[f"{eddie_datastore / recording_path}"] = session_type_folder
+                            stagein_dict[f"{eddie_datastore /'data'/ recording_path}"] = session_type_folder
                             do_stagein_job = True
                             
-                        session_type_folder.mkdir(exist_ok=True)
+                        session_type_folder.mkdir(parents=True, exist_ok=True)
                         
                     stagein_job_name = f"M{mouse}D{day}{session[:2]}in" 
                     run_python_name = f"M{mouse}D{day}{session[:2]}{bodypart}"
                     stageout_job_name = f"M{mouse}D{day}{session[:2]}out" 
 
-                    stageout_dict = {deriv_folder / f"M{mouse:02d}/D{day:02d}/{session}/dlc_output_{bodypart}": eddie_datastore / "derivatives" / f"M{mouse:02d}/D{day:02d}/{session}/"}
+                    stageout_dict = {deriv_folder / f"M{mouse:02d}/D{day:02d}/{session}/dlc_output_{bodypart}": eddie_datastore / "derivatives/VR" / f"M{mouse:02d}/D{day:02d}/{session}/"}
 
                     uv_directory = os.getcwd()
                     python_arg = f"pose_estimation.py --mice={mouse} --days={day} --sessions={session} --bodyparts={bodypart} --data_folder={data_folder} --deriv_folder={deriv_folder} --models_folder={models_folder}"

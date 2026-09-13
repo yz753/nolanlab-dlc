@@ -132,10 +132,23 @@ def main():
     # )[0]
 
     if bodypart in ["eye", "tongue"]:
-        video_path = str(
-            data_folder / session_type_folder
+        video_folder = data_folder / session_type_folder
+        unpadded_video_path = str(
+            video_folder
+            / f"M{mouse}_D{day}_side_capture_{session}.avi"
+        )
+        padded_video_path = str(
+            video_folder
             / f"M{mouse:02d}_D{day:02d}_side_capture_{session}.avi"
         )
+        if not padded_video_path.is_file():
+            try:
+                unpadded_video_path.rename(padded_video_path)
+            except FileNotFoundError:  # it might be renamed by another job
+                if not padded_video_path.is_file():
+                    raise FileNotFoundError(f"Neither {unpadded_video_path} nor {padded_video_path} exist.")
+        video_path = str(padded_video_path)
+
     else:
         matching_files = list((data_folder / session_type_folder).glob(f'M{mouse:02d}_D{day:02d}_*_{session}.avi'))
         video_path = str(matching_files[0])

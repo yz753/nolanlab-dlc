@@ -57,53 +57,50 @@ def main():
     for mouse in mice:
         for day in days:
             for session in sessions:
+                # stage in video first
+                mouse_string = f"{mouse:02d}"
+                day_string = f"{day:02d}"
+                
+                recording_paths = filepath_from_mouse_day_sessions(mouse, day, sessions=[session], path_to_all_filepaths=eddie_yiming_csv_path)
+
+                do_stagein_job = False
+                stagein_dict = {}
+                for recording_path in recording_paths:
+                    if "OF" in recording_path:
+                        padded_video_name = f'M{mouse_string}_D{day_string}_*_{session}.avi'
+                        unpadded_video_name = f'M{mouse}_D{day}_*_{session}.avi'
+                        session_type_folder = data_folder / 'OF'
+                    else:
+                        padded_video_name = f'M{mouse_string}_D{day_string}_side_capture_{session}.avi'
+                        unpadded_video_name = f'M{mouse}_D{day}_side_capture_{session}.avi'
+                        session_type_folder = data_folder / 'VR'    
+                    session_type_folder.mkdir(parents=True, exist_ok=True)
+                    padded_output_path = session_type_folder / padded_video_name
+                    unpadded_output_path = session_type_folder / unpadded_video_name
+                    padded_output_path.parent.mkdir(parents=True, exist_ok=True)
+                    unpadded_output_path.parent.mkdir(parents=True, exist_ok=True)
+
+                    if not padded_output_path.exists():
+                        if not unpadded_output_path.exists():
+                            stagein_dict[f"{eddie_datastore /'data'/ recording_path}"] = session_type_folder
+                            do_stagein_job = True
+                
+                stagein_job_name = f"M{mouse}D{day}{session[:2]}in" 
+                stagein_dependency = None
+                if do_stagein_job:
+                    run_stage_script(stagein_dict, job_name=stagein_job_name)
+                    stagein_dependency = stagein_job_name
+                
                 for bodypart in bodyparts:
-                    mouse_string = f"{mouse:02d}"
-                    day_string = f"{day:02d}"
                     
-                    recording_paths = filepath_from_mouse_day_sessions(mouse, day, sessions=[session], path_to_all_filepaths=eddie_yiming_csv_path)
-
-                    do_stagein_job = False
-                    stagein_dict = {}
-                    for recording_path in recording_paths:
-                        if "OF" in recording_path:
-                            padded_video_name = f'M{mouse_string}_D{day_string}_*_{session}.avi'
-                            unpadded_video_name = f'M{mouse}_D{day}_*_{session}.avi'
-                            session_type_folder = data_folder / 'OF'
-                        else:
-                            padded_video_name = f'M{mouse_string}_D{day_string}_side_capture_{session}.avi'
-                            unpadded_video_name = f'M{mouse}_D{day}_side_capture_{session}.avi'
-                            session_type_folder = data_folder / 'VR'    
-                        session_type_folder.mkdir(parents=True, exist_ok=True)
-                        padded_output_path = session_type_folder / padded_video_name
-                        unpadded_output_path = session_type_folder / unpadded_video_name
-                        padded_output_path.parent.mkdir(parents=True, exist_ok=True)
-                        unpadded_output_path.parent.mkdir(parents=True, exist_ok=True)
-
-                        if not padded_output_path.exists():
-                            if not unpadded_output_path.exists():
-                                stagein_dict[f"{eddie_datastore /'data'/ recording_path}"] = session_type_folder
-                                do_stagein_job = True
-                            if unpadded_output_path.exists():
-                                # files are not renamed yet
-                                try:
-                                    unpadded_output_path.rename(padded_output_path)
-                                except FileNotFoundError: # it might be renamed by another job
-                                    pass
-                    
-                    stagein_job_name = f"M{mouse}D{day}{session[:2]}in" 
                     run_python_name = f"M{mouse}D{day}{session[:2]}{bodypart}"
                     stageout_job_name = f"M{mouse}D{day}{session[:2]}out" 
 
-                    stageout_dict = {deriv_folder / f"M{mouse:02d}/D{day:02d}/{session}/dlc_output_{bodypart}": eddie_datastore / "derivatives/VR" / f"M{mouse:02d}/D{day:02d}/{session}/"}
+                    stageout_dict = {deriv_folder / f"M{mouse:02d}/D{day:02d}/{session}/dlc_output_{bodypart}": eddie_datastore / "derivatives" / f"M{mouse:02d}/D{day:02d}/{session}/"}
 
                     uv_directory = os.getcwd()
                     python_arg = f"pose_estimation.py --mice={mouse} --days={day} --sessions={session} --bodyparts={bodypart} --data_folder={data_folder} --deriv_folder={deriv_folder} --models_folder={models_folder}"
 
-                    stagein_dependency = None
-                    if do_stagein_job:
-                        run_stage_script(stagein_dict, job_name=stagein_job_name)
-                        stagein_dependency = stagein_job_name
                     run_python_script(uv_directory, python_arg, cores=8, email="y.zhao@ed.ac.uk", staging=False, hold_jid=stagein_dependency, job_name=run_python_name)
                     run_stage_script(stageout_dict, job_name=stageout_job_name, hold_jid=run_python_name)
 

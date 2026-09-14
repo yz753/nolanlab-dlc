@@ -17,12 +17,13 @@ mouse,day,session,filepath
 1,16,VR,VR/M1_D16_side_capture_VR.avi
 1,17,VR,VR/M1_D17_side_capture_VR.avi
 1,18,VR,VR/M1_D18_side_capture_VR.avi
-1,19,VR,VR/M1_D19_side_capture1_VR.avi
 1,19,VR,VR/M1_D19_side_capture2_VR.avi
 1,20,VR,VR/M1_D20_side_capture_VR.avi
 1,21,VR,VR/M1_D21_side_capture_VR.avi
 1,22,VR,VR/M1_D22_side_capture_VR.avi
 1,23,VR,VR/M1_D23_side_capture_VR.avi
+1,24,VR,VR/M1_D24_side_capture_VR.avi
+1,25,VR,VR/M1_D25_side_capture_VR.avi
 2,1,VR,VR/M2_D1_side_capture_VR.avi
 2,2,VR,VR/M2_D2_side_capture_VR.avi
 2,3,VR,VR/M2_D3_side_capture_VR.avi
@@ -44,6 +45,8 @@ mouse,day,session,filepath
 2,19,VR,VR/M2_D19_side_capture_VR.avi
 2,20,VR,VR/M2_D20_side_capture_VR.avi
 2,21,VR,VR/M2_D21_side_capture_VR.avi
+2,22,VR,VR/M2_D22_side_capture_VR.avi
+2,23,VR,VR/M2_D23_side_capture_VR.avi
 3,1,VR,VR/M3_D1_side_capture_VR.avi
 3,2,VR,VR/M3_D2_side_capture_VR.avi
 3,3,VR,VR/M3_D3_side_capture_VR.avi

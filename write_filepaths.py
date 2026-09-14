@@ -15,7 +15,7 @@ def search_paths(root: str|Path) -> list[tuple[str, Path]]:
         if not rel_path.is_dir():
             print(f'{session} session folder does not exist.', flush=True)
             continue
-        for avi_path in rel_path.rglob(f"M*_D*_side_capture*_{session}.avi"):
+        for avi_path in rel_path.glob(f"M*_D*_side_capture*_{session}.avi"):
             if avi_path.is_file():
                 all_recording_paths.append((session, avi_path))
     return all_recording_paths

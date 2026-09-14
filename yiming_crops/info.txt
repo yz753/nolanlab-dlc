@@ -1,0 +1,1 @@
+x,y are top left corner coords, for tongue croppping, the spout should be excluded as the model tends to misrecognise it as the tongue.
